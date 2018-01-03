@@ -22,16 +22,38 @@ class App extends React.Component {
   addPerson = (e) => {
     e.preventDefault();
 
-    if (this.checkPersonIsUnique()) {
+    if (this.personIsUnique()) {
       const personObject = {
         name: this.state.newName,
         number: this.state.newNumber
       };
+
       personService.create(personObject).then((newPerson) => {
         this.setState({
           persons: this.state.persons.concat(newPerson)
         });
       });
+    } else {
+      const existingPerson = this.state.persons.find(
+        (person) =>
+          person.name.toLowerCase() === this.state.newName.toLowerCase()
+      );
+
+      const updatedPersonObject = {
+        name: existingPerson.name,
+        number: this.state.newNumber
+      };
+
+      personService
+        .update(existingPerson.id, updatedPersonObject)
+        .then((updatedPerson) => {
+          const personsWithoutUpdated = this.state.persons.filter(
+            (person) => person.id !== updatedPerson.id
+          );
+          this.setState({
+            persons: personsWithoutUpdated.concat(updatedPerson)
+          });
+        });
     }
 
     this.setState({
@@ -56,7 +78,7 @@ class App extends React.Component {
     };
   };
 
-  checkPersonIsUnique = () =>
+  personIsUnique = () =>
     this.state.persons.filter(
       (person) => person.name.toLowerCase() === this.state.newName.toLowerCase()
     ).length === 0;
@@ -123,10 +145,11 @@ const Rajaus = ({filter, handleChange}) => {
 };
 
 const Numerot = ({persons, handleClick}) => {
+  const byId = (person1, person2) => person1.id - person2.id;
   return (
     <table>
       <tbody>
-        {persons.map((person) => (
+        {persons.sort(byId).map((person) => (
           <Person
             key={person.id}
             person={person.name}
