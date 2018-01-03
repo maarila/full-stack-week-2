@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import axios from "axios";
+import personService from "./services/persons";
 
 class App extends React.Component {
   constructor(props) {
@@ -14,8 +14,8 @@ class App extends React.Component {
   }
 
   componentWillMount() {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      this.setState({persons: response.data});
+    personService.getAll().then((persons) => {
+      this.setState({persons});
     });
   }
 
@@ -27,13 +27,11 @@ class App extends React.Component {
         name: this.state.newName,
         number: this.state.newNumber
       };
-      axios
-        .post("http://localhost:3001/persons", personObject)
-        .then((response) => {
-          this.setState({
-            persons: this.state.persons.concat(response.data)
-          });
+      personService.create(personObject).then((newPerson) => {
+        this.setState({
+          persons: this.state.persons.concat(newPerson)
         });
+      });
     }
 
     this.setState({
@@ -114,7 +112,7 @@ const Numerot = ({persons}) => {
       <tbody>
         {persons.map((person) => (
           <Person
-            key={person.name}
+            key={person.id}
             person={person.name}
             number={person.number}
           />
