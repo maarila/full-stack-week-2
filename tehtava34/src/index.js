@@ -40,6 +40,22 @@ class App extends React.Component {
     });
   };
 
+  deletePerson = (id) => {
+    return () => {
+      const poistettava = this.state.persons.find((person) => person.id === id);
+      if (window.confirm(`Poistetaanko ${poistettava.name}?`)) {
+        personService.remove(id).then((response) => {
+          const newPersons = this.state.persons.filter(
+            (person) => person.id !== id
+          );
+          this.setState({
+            persons: newPersons
+          });
+        });
+      }
+    };
+  };
+
   checkPersonIsUnique = () =>
     this.state.persons.filter(
       (person) => person.name.toLowerCase() === this.state.newName.toLowerCase()
@@ -90,7 +106,7 @@ class App extends React.Component {
           </div>
         </form>
         <h3>Numerot</h3>
-        <Numerot persons={this.filterList()} />
+        <Numerot persons={this.filterList()} handleClick={this.deletePerson} />
       </div>
     );
   }
@@ -106,7 +122,7 @@ const Rajaus = ({filter, handleChange}) => {
   );
 };
 
-const Numerot = ({persons}) => {
+const Numerot = ({persons, handleClick}) => {
   return (
     <table>
       <tbody>
@@ -115,6 +131,8 @@ const Numerot = ({persons}) => {
             key={person.id}
             person={person.name}
             number={person.number}
+            id={person.id}
+            handleClick={handleClick}
           />
         ))}
       </tbody>
@@ -122,11 +140,14 @@ const Numerot = ({persons}) => {
   );
 };
 
-const Person = ({person, number}) => {
+const Person = ({person, number, id, handleClick}) => {
   return (
     <tr>
       <td>{person}</td>
       <td>{number}</td>
+      <td>
+        <button onClick={handleClick(id)}>poista</button>
+      </td>
     </tr>
   );
 };
