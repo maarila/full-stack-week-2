@@ -16,9 +16,7 @@ class App extends React.Component {
   }
 
   componentWillMount() {
-    personService.getAll().then((persons) => {
-      this.setState({persons});
-    });
+    personService.getAll().then((persons) => this.setState({persons}));
   }
 
   nollaaViesti = () => {
@@ -27,22 +25,26 @@ class App extends React.Component {
     }, 4000);
   };
 
+  addPersonToDatabase = (personObject, message) => {
+    personService.create(personObject).then((newPerson) => {
+      this.setState({
+        persons: this.state.persons.concat(newPerson),
+        notification: message
+      });
+      this.nollaaViesti();
+    });
+  };
+
   addPerson = (e) => {
     e.preventDefault();
+    const personObject = {
+      name: this.state.newName,
+      number: this.state.newNumber
+    };
 
     if (this.personIsUnique()) {
-      const personObject = {
-        name: this.state.newName,
-        number: this.state.newNumber
-      };
-
-      personService.create(personObject).then((newPerson) => {
-        this.setState({
-          persons: this.state.persons.concat(newPerson),
-          notification: `${newPerson.name} lisätty onnistuneesti.`
-        });
-        this.nollaaViesti();
-      });
+      const message = `${personObject.name} lisätty onnistuneesti.`;
+      this.addPersonToDatabase(personObject, message);
     } else {
       const existingPerson = this.state.persons.find(
         (person) =>
@@ -65,6 +67,13 @@ class App extends React.Component {
             notification: `Puhelinnumero päivitetty onnistuneesti.`
           });
           this.nollaaViesti();
+        })
+        .catch((error) => {
+          personService.getAll().then((persons) => this.setState({persons}));
+          const message = `Henkilöä ${
+            personObject.name
+          } ei löytynyt. Lisätty puhelinluetteloon.`;
+          this.addPersonToDatabase(personObject, message);
         });
     }
 
