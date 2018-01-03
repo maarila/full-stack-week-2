@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import personService from "./services/persons";
+import "./index.css";
 
 class App extends React.Component {
   constructor(props) {
@@ -9,7 +10,8 @@ class App extends React.Component {
       persons: [],
       newName: "",
       newNumber: "",
-      filter: ""
+      filter: "",
+      notification: null
     };
   }
 
@@ -18,6 +20,12 @@ class App extends React.Component {
       this.setState({persons});
     });
   }
+
+  nollaaViesti = () => {
+    setTimeout(() => {
+      this.setState({notification: null});
+    }, 4000);
+  };
 
   addPerson = (e) => {
     e.preventDefault();
@@ -30,8 +38,10 @@ class App extends React.Component {
 
       personService.create(personObject).then((newPerson) => {
         this.setState({
-          persons: this.state.persons.concat(newPerson)
+          persons: this.state.persons.concat(newPerson),
+          notification: `${newPerson.name} lisätty onnistuneesti.`
         });
+        this.nollaaViesti();
       });
     } else {
       const existingPerson = this.state.persons.find(
@@ -51,8 +61,10 @@ class App extends React.Component {
             (person) => person.id !== updatedPerson.id
           );
           this.setState({
-            persons: personsWithoutUpdated.concat(updatedPerson)
+            persons: personsWithoutUpdated.concat(updatedPerson),
+            notification: `Puhelinnumero päivitetty onnistuneesti.`
           });
+          this.nollaaViesti();
         });
     }
 
@@ -71,9 +83,11 @@ class App extends React.Component {
             (person) => person.id !== id
           );
           this.setState({
-            persons: newPersons
+            persons: newPersons,
+            notification: `${poistettava.name} poistettu onnistuneesti.`
           });
         });
+        this.nollaaViesti();
       }
     };
   };
@@ -103,6 +117,7 @@ class App extends React.Component {
   render() {
     return (
       <div>
+        <Notification message={this.state.notification} />
         <h2>Puhelinluettelo</h2>
         <Rajaus
           filter={this.state.filter}
@@ -149,15 +164,17 @@ const Numerot = ({persons, handleClick}) => {
   return (
     <table>
       <tbody>
-        {persons.sort(byId).map((person) => (
-          <Person
-            key={person.id}
-            person={person.name}
-            number={person.number}
-            id={person.id}
-            handleClick={handleClick}
-          />
-        ))}
+        {persons
+          .sort(byId)
+          .map((person) => (
+            <Person
+              key={person.id}
+              person={person.name}
+              number={person.number}
+              id={person.id}
+              handleClick={handleClick}
+            />
+          ))}
       </tbody>
     </table>
   );
@@ -173,6 +190,13 @@ const Person = ({person, number, id, handleClick}) => {
       </td>
     </tr>
   );
+};
+
+const Notification = ({message}) => {
+  if (message === null) {
+    return null;
+  }
+  return <div className="notification">{message}</div>;
 };
 
 ReactDOM.render(<App />, document.getElementById("root"));
